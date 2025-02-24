@@ -84,7 +84,12 @@ class Game:
 
     def __init__(self):
         self.deck = Deck()
-        self.cards_played = set()
+        self.cards_played = {
+            Suit.club: [],
+            Suit.diamond: [],
+            Suit.heart: [],
+            Suit.spade: [],
+        }
 
         self.board = []
 
@@ -104,6 +109,7 @@ class Game:
     def draw_card(self):
         top_card = self.deck.draw_card()
         if top_card is None:
+            print("You escaped!")
             self.game_ends()
 
         self.board.append(top_card)
@@ -134,7 +140,8 @@ class Game:
 
     def card_play(self, card_index: int) -> None:
         played_card = self.board.pop(card_index)
-        self.cards_played.add(played_card)
+        self.cards_played[played_card.suit].append(played_card.return_score())
+        self.cards_played[played_card.suit].sort()
 
         if played_card.suit == Suit.diamond:
             self.diamond_play(played_card)
@@ -228,6 +235,29 @@ def print_health(game: Game) -> str:
     return TextFormat.BOLD + str(game.health) + TextFormat.END
 
 
+def print_cards_played(game: Game) -> None:
+    for s in Suit:
+        if len(game.cards_played[s]) > 0:
+            suit_print = ""
+            if s == Suit.diamond or s == Suit.heart:
+                suit_print += TextFormat.RED
+            suit_print += TextFormat.BOLD + s.value + TextFormat.END
+
+            output = []
+            for val in game.cards_played[s]:
+                if val == 14:
+                    output.append("A")
+                elif val == 11:
+                    output.append("J")
+                elif val == 12:
+                    output.append("Q")
+                elif val == 13:
+                    output.append("K")
+                else:
+                    output.append(str(val))
+            print(f"{suit_print}: {', '.join(output)}")
+
+
 def print_game_state(game: Game) -> None:
     print(f"    Room {game.room}")
     print()
@@ -239,7 +269,7 @@ def print_game_state(game: Game) -> None:
     print()
     print(f"Health:  {print_health(game)} / 20")
     print()
-    print(game.cards_played)
+    print_cards_played(game)
 
 
 # Input management
